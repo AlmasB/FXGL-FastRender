@@ -1,3 +1,5 @@
+// adapted from https://github.com/mipastgt/JFXToolsAndDemos/tree/master/jfxtools-awtimage/src/main/java/de/mpmediasoft/jfxtools/awtimage
+
 package com.almasb.fastrendertest.buffer;
 
 import java.awt.Graphics2D;
