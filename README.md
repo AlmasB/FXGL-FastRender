@@ -1,6 +1,12 @@
 # FXGL-FastRender
-A quick demo of various approaches of rendering a single pixel (`fillRect(x, y, 1, 1)`) inside an FXGL environment.
-It should be noted that the results below are just a single pass (no comprehensive statistics applied). Depending on the actual use case (e.g. `drawImage()` or `drawPolygon()`), the results of these approaches might differ.
+
+A quick demo of various approaches of rendering a single pixel (`fillRect(x, y, 1, 1)`) inside an [FXGL](https://github.com/AlmasB/FXGL) environment. There are not many online resources that are easily available to refer to when it comes to JavaFX drawing performance. Hence, the aim of this demo is to help identify the fastest practical approach to draw a bunch of unrelated pixels (e.g. particles), specifically in JavaFX. For that reason, in the meantime, no external native libraries are considered.
+
+Note that the approaches are not tested directly (e.g. testing if calling `method1()` is faster than calling `method2()`). Hence, approaches like `Canvas.fillRect()` are at a natural disadvantage as they do not support multi-threading and therefore we can see a poor result from `CanvasTestApp`.
+
+It should also be noted that the results below are just a single pass (no comprehensive statistics applied) and they are only for illustrative purposes. Depending on the actual use case (e.g. `drawImage()` or `drawPolygon()`), the results of these approaches might differ.
+
+Finally, if you spot an error in implementation or have suggestions on how to improve performance, contributions are welcome.
 
 ## Run
 
