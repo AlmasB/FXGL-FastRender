@@ -8,6 +8,8 @@ It should also be noted that the results below are just a single pass (no compre
 
 Finally, if you spot an error in implementation or have suggestions on how to improve performance, contributions are welcome.
 
+![promo](https://raw.githubusercontent.com/AlmasB/git-server/master/storage/images/javafx_render_particles.png)
+
 ## Run
 
 ```
