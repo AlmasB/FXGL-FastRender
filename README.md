@@ -62,6 +62,8 @@ Max: 78.3333
 
 - PixelBufferGPUTest
 
+(GPU needs to support OpenCL 1.2 / 2 and have appropriate drivers installed).
+
 Note: we can see that with GPU we can run 10M particles and still beat CPU at 1M.
 
 ```
