@@ -25,6 +25,8 @@ public class WritableImageView extends ImageView {
     private IntBuffer buffer;
     private PixelBuffer<IntBuffer> pixelBuffer;
 
+    public int gpuIndex = 0;
+
     public WritableImageView(int width, int height) {
         this.width = width;
         this.height = height;
@@ -35,6 +37,10 @@ public class WritableImageView extends ImageView {
         pixelBuffer = new PixelBuffer<>(width, height, buffer, PixelFormat.getIntArgbPreInstance());
 
         setImage(new WritableImage(pixelBuffer));
+    }
+
+    public int[] getPixels() {
+        return rawInts;
     }
 
     /**

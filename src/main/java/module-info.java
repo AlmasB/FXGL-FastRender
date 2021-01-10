@@ -3,4 +3,5 @@
  */
 open module com.almasb.fxglfastrender {
     requires com.almasb.fxgl.all;
+    requires aparapi;
 }

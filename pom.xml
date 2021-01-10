@@ -17,7 +17,7 @@
         <maven.shade.version>3.0.0</maven.shade.version>
 
         <fxgl.version>11.12</fxgl.version>
-        <mainClassName>com.almasb.fastrendertest.CanvasIntBufferTestApp</mainClassName>
+        <mainClassName>com.almasb.fastrendertest.PixelBufferGPUTestApp</mainClassName>
     </properties>
 
     <dependencies>
@@ -25,6 +25,12 @@
             <groupId>com.github.almasb</groupId>
             <artifactId>fxgl</artifactId>
             <version>${fxgl.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.aparapi</groupId>
+            <artifactId>aparapi</artifactId>
+            <version>2.0.0</version>
         </dependency>
     </dependencies>
 

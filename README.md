@@ -16,7 +16,7 @@ Finally, if you spot an error in implementation or have suggestions on how to im
 mvn javafx:run
 ```
 
-## Some sample tests (how long it took to compute a frame in ms)
+## CPU-based sample tests (how long it took to compute a frame in ms) - 1M particles
 
 - CanvasTestApp
 
@@ -56,4 +56,16 @@ Note: better performance than high-level Canvas but slower than Canvas with IntB
 Avg: 45.6501834
 Min: 41.524
 Max: 78.3333
+```
+
+## GPU-based Sample Tests - 10M particles
+
+- PixelBufferGPUTest
+
+Note: we can see that with GPU we can run 10M particles and still beat CPU at 1M.
+
+```
+Avg: 8.81632675
+Min: 6.1725
+Max: 11.0581
 ```

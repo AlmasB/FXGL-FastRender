@@ -7,9 +7,11 @@
 package com.almasb.fastrendertest;
 
 import com.almasb.fastrendertest.buffer.Particle;
+import com.almasb.fastrendertest.buffer.ParticleKernel;
 import com.almasb.fastrendertest.buffer.WritableImageView;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
+import com.aparapi.Range;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 import kotlin.Unit;
@@ -26,7 +28,7 @@ import static com.almasb.fxgl.dsl.FXGL.*;
 /**
  * @author Almas Baimagambetov (almaslvl@gmail.com)
  */
-public class PixelBufferTestApp extends GameApplication {
+public class PixelBufferGPUTestApp extends GameApplication {
 
     private static final int W = 1280;
     private static final int H = 720;
@@ -41,12 +43,12 @@ public class PixelBufferTestApp extends GameApplication {
      * The total number of particles in the demo.
      * You can safely change this without the need to change anything else.
      */
-    private static final int NUM_PARTICLES = 2_000_000;
+    private static final int NUM_PARTICLES_GPU = 10_000_000;
 
     /**
      * Number of frames to run for benchmark before shutting down.
      */
-    private static final int NUM_FRAMES_TO_RUN = 1000;
+    private static final int NUM_FRAMES_TO_RUN = 2000;
 
     /**
      * Stores background pixels in ARGB format.
@@ -56,7 +58,8 @@ public class PixelBufferTestApp extends GameApplication {
     private boolean isProfilingStarted = false;
     private int currentFrame = 0;
 
-    private List<Particle> particles = new ArrayList<>();
+    // 2float + 2float + 2float
+    private final float[] particlesData = new float[NUM_PARTICLES_GPU * 6];
 
     /**
      * Stores fully drawn images.
@@ -73,6 +76,10 @@ public class PixelBufferTestApp extends GameApplication {
      */
     private WritableImageView currentBuffer;
 
+    private List<WritableImageView> gpuBuffers = new ArrayList<>();
+
+    private ParticleKernel kernel;
+
     @Override
     protected void initSettings(GameSettings settings) {
         settings.setWidth(W);
@@ -81,24 +88,49 @@ public class PixelBufferTestApp extends GameApplication {
 
     @Override
     protected void initGame() {
+        System.out.println("Running with num particles: 10_000_000");
+
         // fill the bg array with color black
         Arrays.fill(BACKGROUND_COLOR_ARRAY, Particle.toARGB(Color.BLACK));
 
         for (int i = 0; i < BUFFER_SIZE; i++) {
-            emptyBuffers.add(new WritableImageView(W, H));
+            var buffer = new WritableImageView(W, H);
+            buffer.gpuIndex = i;
+            emptyBuffers.add(buffer);
+
+            gpuBuffers.add(buffer);
         }
 
-        for (int i = 0; i < NUM_PARTICLES; i++) {
+        kernel = new ParticleKernel(
+                BACKGROUND_COLOR_ARRAY, gpuBuffers.get(0).getPixels(), gpuBuffers.get(1).getPixels(), gpuBuffers.get(2).getPixels(),
+                particlesData, 0, 0, W, H);
+
+        for (int i = 0; i < NUM_PARTICLES_GPU; i++) {
             var p = new Particle(i);
             p.position.set(random(200, 500), random(200, 400));
             p.velocity.set(random(-1, 1), random(-1, 1));
             p.acceleration.set(random(-1, 1) * 0.005f, -0.21f * random(0, 1));
 
-            particles.add(p);
+            particlesData[i*6+0] = p.position.x;
+            particlesData[i*6+1] = p.position.y;
+
+            particlesData[i*6+2] = p.velocity.x;
+            particlesData[i*6+3] = p.velocity.y;
+
+            particlesData[i*6+4] = p.acceleration.x;
+            particlesData[i*6+5] = p.acceleration.y;
         }
 
         getExecutor().startAsync(() -> {
             loopInBackground();
+
+            try {
+                if (kernel != null) {
+                    kernel.dispose();
+                }
+            } catch (Exception e) {
+                System.out.println("Dispose e: " + e);
+            }
 
             getExecutor().startAsyncFX(() -> getGameController().exit());
         });
@@ -129,8 +161,6 @@ public class PixelBufferTestApp extends GameApplication {
                     timings[currentFrame++] = ms;
                 }
 
-                fullBuffers.add(buffer);
-
                 if (currentFrame == NUM_FRAMES_TO_RUN) {
                     System.out.println("Avg: " + Arrays.stream(timings).average().getAsDouble());
                     System.out.println("Min: " + Arrays.stream(timings).min().getAsDouble());
@@ -138,6 +168,26 @@ public class PixelBufferTestApp extends GameApplication {
 
                     isRunning = false;
                 }
+
+                getExecutor().startAsyncFX(() -> {
+                    addUINode(buffer);
+
+                    if (currentBuffer != null) {
+                        removeUINode(currentBuffer);
+                        emptyBuffers.add(currentBuffer);
+                    }
+
+                    currentBuffer = buffer;
+
+                    buffer.updateBuffer();
+                });
+
+                // the above asyncFX takes some time to execute on FX thread, which in turn (probably) updates dirty regions on render thread
+                // I don't know how to measure that time on render thread, so use arbitrary(-ish) 4.5 to give CPU some time to sleep
+                double sleepTime = 3.5 - ms;
+
+                if (sleepTime > 0)
+                    Thread.sleep((long) sleepTime);
             }
 
         } catch (Exception e) {
@@ -147,45 +197,22 @@ public class PixelBufferTestApp extends GameApplication {
 
     // this is our callback that runs on a background thread
     private void updateAndDraw(WritableImageView buffer) {
-        // draw background into buffer
-        buffer.setPixels(BACKGROUND_COLOR_ARRAY);
+        float mouseX = (float) getInput().getMouseXWorld();
+        float mouseY = (float) getInput().getMouseYWorld();
 
-        double mouseX = getInput().getMouseXWorld();
-        double mouseY = getInput().getMouseYWorld();
+        // CPU-GPU communication code
+        kernel.clear(buffer.gpuIndex);
+        kernel.execute(Range.create(W*H));
 
-        int appWidth = getAppWidth();
-        int appHeight = getAppHeight();
+        kernel.set(buffer.gpuIndex, mouseX, mouseY);
+        kernel.execute(Range.create(NUM_PARTICLES_GPU));
 
-        // update and draw in parallel, which isn't possible with Canvas
-        particles.parallelStream().forEach(p -> {
-            p.update(mouseX, mouseY, appWidth, appHeight);
-
-            int x = (int) p.position.x;
-            int y = (int) p.position.y;
-
-            buffer.setArgb(x, y, Particle.ARGB_COLOR);
-        });
-    }
-
-    // this is an FXGL callback that runs on JavaFX thread
-    @Override
-    protected void onUpdate(double tpf) {
-        try {
-            var buffer = fullBuffers.take();
-
-            addUINode(buffer);
-
-            if (currentBuffer != null) {
-                removeUINode(currentBuffer);
-                emptyBuffers.add(currentBuffer);
-            }
-
-            buffer.updateBuffer();
-
-            currentBuffer = buffer;
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if (buffer.gpuIndex == 0) {
+            kernel.get(kernel.pixels1);
+        } else if (buffer.gpuIndex == 2) {
+            kernel.get(kernel.pixels2);
+        } else {
+            kernel.get(kernel.pixels3);
         }
     }
 
