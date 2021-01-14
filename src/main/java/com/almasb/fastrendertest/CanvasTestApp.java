@@ -8,6 +8,7 @@ package com.almasb.fastrendertest;
 
 import com.almasb.fastrendertest.buffer.CanvasIntBuffer;
 import com.almasb.fastrendertest.buffer.Particle;
+import com.almasb.fastrendertest.stat.Stats;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import javafx.scene.canvas.Canvas;
@@ -134,10 +135,7 @@ public class CanvasTestApp extends GameApplication {
                 fullBuffers.add(buffer);
 
                 if (currentFrame == NUM_FRAMES_TO_RUN) {
-                    System.out.println("Avg: " + Arrays.stream(timings).average().getAsDouble());
-                    System.out.println("Min: " + Arrays.stream(timings).min().getAsDouble());
-                    System.out.println("Max: " + Arrays.stream(timings).max().getAsDouble());
-
+                    Stats.printStats(timings);
                     isRunning = false;
                 }
             }

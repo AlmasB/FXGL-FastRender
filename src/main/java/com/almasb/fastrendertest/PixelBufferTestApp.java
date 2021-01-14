@@ -8,6 +8,7 @@ package com.almasb.fastrendertest;
 
 import com.almasb.fastrendertest.buffer.Particle;
 import com.almasb.fastrendertest.buffer.WritableImageView;
+import com.almasb.fastrendertest.stat.Stats;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import javafx.scene.paint.Color;
@@ -41,7 +42,7 @@ public class PixelBufferTestApp extends GameApplication {
      * The total number of particles in the demo.
      * You can safely change this without the need to change anything else.
      */
-    private static final int NUM_PARTICLES = 2_000_000;
+    private static final int NUM_PARTICLES = 1_000_000;
 
     /**
      * Number of frames to run for benchmark before shutting down.
@@ -132,9 +133,7 @@ public class PixelBufferTestApp extends GameApplication {
                 fullBuffers.add(buffer);
 
                 if (currentFrame == NUM_FRAMES_TO_RUN) {
-                    System.out.println("Avg: " + Arrays.stream(timings).average().getAsDouble());
-                    System.out.println("Min: " + Arrays.stream(timings).min().getAsDouble());
-                    System.out.println("Max: " + Arrays.stream(timings).max().getAsDouble());
+                    Stats.printStats(timings);
 
                     isRunning = false;
                 }

@@ -9,6 +9,7 @@ package com.almasb.fastrendertest;
 import com.almasb.fastrendertest.buffer.Particle;
 import com.almasb.fastrendertest.buffer.ParticleKernel;
 import com.almasb.fastrendertest.buffer.WritableImageView;
+import com.almasb.fastrendertest.stat.Stats;
 import com.almasb.fxgl.app.GameApplication;
 import com.almasb.fxgl.app.GameSettings;
 import com.aparapi.Range;
@@ -48,7 +49,7 @@ public class PixelBufferGPUTestApp extends GameApplication {
     /**
      * Number of frames to run for benchmark before shutting down.
      */
-    private static final int NUM_FRAMES_TO_RUN = 2000;
+    private static final int NUM_FRAMES_TO_RUN = 1000;
 
     /**
      * Stores background pixels in ARGB format.
@@ -162,9 +163,7 @@ public class PixelBufferGPUTestApp extends GameApplication {
                 }
 
                 if (currentFrame == NUM_FRAMES_TO_RUN) {
-                    System.out.println("Avg: " + Arrays.stream(timings).average().getAsDouble());
-                    System.out.println("Min: " + Arrays.stream(timings).min().getAsDouble());
-                    System.out.println("Max: " + Arrays.stream(timings).max().getAsDouble());
+                    Stats.printStats(timings);
 
                     isRunning = false;
                 }
