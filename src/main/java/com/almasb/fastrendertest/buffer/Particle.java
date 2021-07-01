@@ -75,4 +75,23 @@ public final class Particle {
                 | (int) (color.getGreen() * 255) <<  8
                 | (int) (color.getBlue() * 255);
     }
+
+    public static int add(int colorA, int colorB) {
+        int aA = (colorA >> 24) & 0xFF;
+        int rA = (colorA >> 16) & 0xFF;
+        int gA = (colorA >> 8) & 0xFF;
+        int bA = (colorA >> 0) & 0xFF;
+
+        int aB = (colorB >> 24) & 0xFF;
+        int rB = (colorB >> 16) & 0xFF;
+        int gB = (colorB >> 8) & 0xFF;
+        int bB = (colorB >> 0) & 0xFF;
+
+        int aC = Math.min(aA + aB, 255);
+        int rC = Math.min(rA + rB, 255);
+        int gC = Math.min(gA + gB, 255);
+        int bC = Math.min(bA + bB, 255);
+
+        return (aC << 24) | (rC << 16) | (gC << 8) | bC;
+    }
 }
