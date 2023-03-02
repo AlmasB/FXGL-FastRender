@@ -89,7 +89,7 @@ public class PixelBufferGPUTestApp extends GameApplication {
 
     @Override
     protected void initGame() {
-        System.out.println("Running with num particles: 10_000_000");
+        System.out.println("Running with num particles: "+NUM_PARTICLES_GPU);
 
         // fill the bg array with color black
         Arrays.fill(BACKGROUND_COLOR_ARRAY, Particle.toARGB(Color.BLACK));
